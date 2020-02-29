@@ -1,4 +1,4 @@
-###### Detached
+# Detached
 
 2d platform puzzle game
 
