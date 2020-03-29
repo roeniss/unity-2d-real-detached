@@ -10,33 +10,45 @@ public class PlayerController : MonoBehaviour
     private bool isGrounded;
     private bool jumped;
     private Rigidbody2D rigidBody;
+    private bool movable;
 
     [Header("Shoot Attributes")]
     private short arms;
+    private short cnt;
+    private bool retreiving;
 
     [Header("Ground Check Attributes")]
     public GameObject groundCheck;
     public float groundCheckRadius;
-    public LayerMask whatIsGrounded;
+    private LayerMask whatIsGrounded;
 
     private Animator animator;
     private short dir;
     private short lastDir;
     private enum State { idle, walk, jump_ready, jump_air, charge, fire };
     private State state;
+    private bool stateFixed;
 
     void Start()
     {
         rigidBody = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
+        movable = true;
         jumped = false;
+
         arms = 2;
+        cnt = 0;
+        retreiving = false;
+
+        whatIsGrounded = LayerMask.GetMask("Ground");
+
         dir = 0;
         lastDir = 1;
         state = State.idle;
+        stateFixed = false;
     }
     
-    void FixedUpdate()
+    void Update()
     {
         GroundCheck();
         Jump();
@@ -48,67 +60,116 @@ public class PlayerController : MonoBehaviour
     void GroundCheck()
     {
         isGrounded = Physics2D.OverlapCircle(groundCheck.transform.position, groundCheckRadius, whatIsGrounded);
+
+        if (!isGrounded)
+        {
+            state = State.jump_air;
+            jumped = false;
+        }
+        else
+        {
+            if (state == State.jump_ready || state == State.fire) stateFixed = true;
+            else stateFixed = false;
+        }
     }
 
     void Move()
     {
         Vector2 movement = new Vector2(Input.GetAxis("Horizontal") * moveSpeed * Time.fixedDeltaTime, 0);
 
-        if (isGrounded)
+        if (movement.x < 0)
         {
-            if (movement.x < 0)
+            dir = -1;
+            lastDir = -1;
+            if (isGrounded)
             {
-                dir = -1;
-                lastDir = -1;
-                state = State.walk;
+                if (!stateFixed) state = State.walk;
             }
-            if (movement.x > 0)
+        }
+        if (movement.x > 0)
+        {
+            dir = 1;
+            lastDir = 1;
+            if (isGrounded)
             {
-                dir = 1;
-                lastDir = 1;
-                state = State.walk;
+                if (!stateFixed) state = State.walk;
             }
-            if (movement.x == 0)
+        }
+        if (movement.x == 0)
+        {
+            dir = 0;
+            if (isGrounded)
             {
-                dir = 0;
-                state = State.idle;
+                if (!stateFixed) state = State.idle;
             }
         }
         
-        rigidBody.transform.Translate(movement);
+        if (movable) rigidBody.transform.Translate(movement);
     }
 
     void Jump()
     {
-        if (isGrounded)
+        if (isGrounded && movable)
         {
             if (Input.GetButtonDown("Jump") && !jumped)
             {
                 state = State.jump_ready;
+                stateFixed = true;
                 jumped = true;
-                Invoke("MakeJump", 0.15f);
+                Invoke("MakeJump", 0.3f);
             }
         }
     }
 
     void MakeJump()
     {
-        state = State.jump_air;
         rigidBody.AddForce(new Vector2(0f, jumpHeight), ForceMode2D.Impulse);
-        jumped = false;
     }
 
     void Shoot()
     {
-        if (isGrounded && Input.GetKey(KeyCode.L))
+        if (isGrounded)
         {
-            state = State.charge;
+            if (Input.GetKey(KeyCode.L) && arms != 0)
+            {
+                if (!retreiving)
+                {
+                    movable = false;
+                    state = State.charge;
+                    if (cnt == 0) cnt++;
+                }
+            }
+            if (Input.GetKeyUp(KeyCode.L) && arms != 0)
+            {
+                if (!retreiving)
+                {
+                    state = State.fire;
+                    Invoke("MakeShoot", 0.3f);
+                    stateFixed = true;
+                    if (cnt == 1) cnt++;
+                }
+            }
         }
-        if (isGrounded && Input.GetKeyUp(KeyCode.L))
+       
+        if (Input.GetKeyDown(KeyCode.L) && arms == 0)
         {
-            state = State.fire;
-            if (arms != 0) arms--;
+            arms = 2;
+            retreiving = true;
+            cnt++;
         }
+        if (Input.GetKeyUp(KeyCode.L) && retreiving) retreiving = false;
+
+        if (cnt == 3)
+        {
+            cnt = 0;
+        }
+    }
+
+    void MakeShoot()
+    {
+        movable = true;
+        state = State.idle;
+        arms--;
     }
 
     void AnimationControl()
@@ -191,13 +252,11 @@ public class PlayerController : MonoBehaviour
                 {
                     if (arms == 2) animator.Play("Shoot_Right_Fire_1");
                     if (arms == 1) animator.Play("Shoot_Right_Fire_2");
-                    if (arms == 0) animator.Play("Shoot_Right_Fire_3");
                 }
                 if (lastDir == -1)
                 {
                     if (arms == 2) animator.Play("Shoot_Left_Fire_1");
                     if (arms == 1) animator.Play("Shoot_Left_Fire_2");
-                    if (arms == 0) animator.Play("Shoot_Left_Fire_3");
                 }
                 break;
         }
