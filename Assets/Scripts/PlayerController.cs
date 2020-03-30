@@ -15,7 +15,7 @@ public class PlayerController : MonoBehaviour
     [Header("Shoot Attributes")]
     private short arms;
     private short cnt;
-    private bool retreiving;
+    private bool retrieving;
 
     [Header("Ground Check Attributes")]
     public GameObject groundCheck;
@@ -38,7 +38,7 @@ public class PlayerController : MonoBehaviour
 
         arms = 2;
         cnt = 0;
-        retreiving = false;
+        retrieving = false;
 
         whatIsGrounded = LayerMask.GetMask("Ground");
 
@@ -113,10 +113,14 @@ public class PlayerController : MonoBehaviour
         {
             if (Input.GetButtonDown("Jump") && !jumped)
             {
+                // Jump start.
                 state = State.jump_ready;
-                stateFixed = true;
-                jumped = true;
+                // Wait until the jump_animation is finished.
                 Invoke("MakeJump", 0.3f);
+                // Player's state is fixed while jump_ready animation is playing.
+                stateFixed = true;
+                // Player has jumped.
+                jumped = true;
             }
         }
     }
@@ -128,36 +132,53 @@ public class PlayerController : MonoBehaviour
 
     void Shoot()
     {
-        if (isGrounded)
+        if (isGrounded && !stateFixed)
         {
+            // Charge
             if (Input.GetKey(KeyCode.L) && arms != 0)
             {
-                if (!retreiving)
+                if (!retrieving)
                 {
-                    movable = false;
+                    // Charging start.
                     state = State.charge;
+                    // Player can't move while charging.
+                    movable = false;
+
                     if (cnt == 0) cnt++;
                 }
             }
+            // Fire
             if (Input.GetKeyUp(KeyCode.L) && arms != 0)
             {
-                if (!retreiving)
+                if (!retrieving)
                 {
+                    // Firing start.
                     state = State.fire;
+                    // Wait for the fire animation to finish.
                     Invoke("MakeShoot", 0.3f);
+                    //  player's state is fixed while the animation is playing
                     stateFixed = true;
+
                     if (cnt == 1) cnt++;
                 }
             }
         }
-       
+
+        // Retreive
         if (Input.GetKeyDown(KeyCode.L) && arms == 0)
         {
+            // Retreiving start.
+            retrieving = true;
+            // Restore arm number.
             arms = 2;
-            retreiving = true;
+
             cnt++;
         }
-        if (Input.GetKeyUp(KeyCode.L) && retreiving) retreiving = false;
+        // Retreiving finished. This has to be fixed when shooting mechanism is implemented.
+        if (Input.GetKeyUp(KeyCode.L) && retrieving)
+        {
+            retrieving = false;
+        }
 
         if (cnt == 3)
         {
@@ -167,6 +188,7 @@ public class PlayerController : MonoBehaviour
 
     void MakeShoot()
     {
+        // Once firing is done, player is able to move, change state and an arm is reduced.
         movable = true;
         state = State.idle;
         arms--;
@@ -192,13 +214,13 @@ public class PlayerController : MonoBehaviour
                 }
                 break;
             case State.walk:
-                if (dir > 0)
+                if (dir == 1)
                 {
                     if (arms == 2) animator.Play("Walk_Right_1");
                     if (arms == 1) animator.Play("Walk_Right_2");
                     if (arms == 0) animator.Play("Walk_Right_3");
                 }
-                if (dir < 0)
+                if (dir == -1)
                 {
                     if (arms == 2) animator.Play("Walk_Left_1");
                     if (arms == 1) animator.Play("Walk_Left_2");

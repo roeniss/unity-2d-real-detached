@@ -168,8 +168,8 @@ GameObject:
   - component: {fileID: 193579138}
   - component: {fileID: 193579137}
   - component: {fileID: 193579136}
-  - component: {fileID: 193579140}
   - component: {fileID: 193579141}
+  - component: {fileID: 193579140}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -303,9 +303,6 @@ MonoBehaviour:
   jumpHeight: 400
   groundCheck: {fileID: 810104637}
   groundCheckRadius: 20
-  whatIsGrounded:
-    serializedVersion: 2
-    m_Bits: 256
 --- !u!95 &193579141
 Animator:
   serializedVersion: 3
