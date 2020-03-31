@@ -13,9 +13,15 @@ public class PlayerController : MonoBehaviour
     private bool movable;
 
     [Header("Shoot Attributes")]
+    public HandController firstHand;
+    public HandController secondHand;
+    public float powerLimit;
+    public float powerIncrement;
+    private float power;
     private short arms;
-    private short cnt;
-    private bool retrieving;
+    private bool leftRetreiving;
+    private bool rightRetreiving;
+    private bool shootEnabled;
 
     [Header("Ground Check Attributes")]
     public GameObject groundCheck;
@@ -36,9 +42,11 @@ public class PlayerController : MonoBehaviour
         movable = true;
         jumped = false;
 
+        power = 0.0f;
         arms = 2;
-        cnt = 0;
-        retrieving = false;
+        leftRetreiving = false;
+        rightRetreiving = false;
+        shootEnabled = true;
 
         whatIsGrounded = LayerMask.GetMask("Ground");
 
@@ -132,34 +140,36 @@ public class PlayerController : MonoBehaviour
 
     void Shoot()
     {
-        if (isGrounded && !stateFixed)
+        if (isGrounded && !stateFixed && shootEnabled)
         {
             // Charge
             if (Input.GetKey(KeyCode.L) && arms != 0)
             {
-                if (!retrieving)
+                if (!leftRetreiving || !rightRetreiving)
                 {
                     // Charging start.
                     state = State.charge;
                     // Player can't move while charging.
                     movable = false;
-
-                    if (cnt == 0) cnt++;
+                    // Increase power until limit;
+                    if (power < powerLimit) power += powerIncrement;
                 }
             }
             // Fire
             if (Input.GetKeyUp(KeyCode.L) && arms != 0)
             {
-                if (!retrieving)
+                if (!leftRetreiving || !rightRetreiving)
                 {
                     // Firing start.
                     state = State.fire;
                     // Wait for the fire animation to finish.
                     Invoke("MakeShoot", 0.3f);
-                    //  player's state is fixed while the animation is playing
+                    // Player's state is fixed while the animation is playing
                     stateFixed = true;
-
-                    if (cnt == 1) cnt++;
+                    // Call HandController class's function to actually fire
+                    if (arms == 2) firstHand.Fire(power);
+                    if (arms == 1) secondHand.Fire(power);
+                    power = 0.0f;
                 }
             }
         }
@@ -167,23 +177,33 @@ public class PlayerController : MonoBehaviour
         // Retreive
         if (Input.GetKeyDown(KeyCode.L) && arms == 0)
         {
+            shootEnabled = false;
             // Retreiving start.
-            retrieving = true;
-            // Restore arm number.
-            arms = 2;
-
-            cnt++;
+            leftRetreiving = true;
+            rightRetreiving = true;
+            // Call HandController class's function to actually start retreiving
+            firstHand.Retreive();
+            secondHand.Retreive();
         }
-        // Retreiving finished. This has to be fixed when shooting mechanism is implemented.
-        if (Input.GetKeyUp(KeyCode.L) && retrieving)
+        if (Input.GetKeyUp(KeyCode.L) && !shootEnabled)
         {
-            retrieving = false;
+            shootEnabled = true;
         }
 
-        if (cnt == 3)
+        // Check if retreiving is all done
+        if (arms == 0 && leftRetreiving)
         {
-            cnt = 0;
+            leftRetreiving = !firstHand.RetreiveComplete();
+            if (leftRetreiving) leftRetreiving = false;
+            if (!leftRetreiving && !rightRetreiving) arms = 2;
         }
+        if (arms == 0 && rightRetreiving)
+        {
+            rightRetreiving = !secondHand.RetreiveComplete();
+            if (rightRetreiving) rightRetreiving = false;
+            if (!leftRetreiving && !rightRetreiving) shootEnabled = true;
+        }
+        
     }
 
     void MakeShoot()
@@ -287,5 +307,10 @@ public class PlayerController : MonoBehaviour
     private void OnDrawGizmos()
     {
         Gizmos.DrawWireSphere(groundCheck.transform.position, groundCheckRadius);
+    }
+
+    public short getDir()
+    {
+        return lastDir;
     }
 }
