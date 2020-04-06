@@ -5,12 +5,14 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     [Header("Movement Attributes")]
+    public Camera camera;
     public float moveSpeed;
     public float jumpHeight;
     private bool isGrounded;
     private bool jumped;
     private Rigidbody2D rigidBody;
     private bool movable;
+    private bool controlling;
 
     [Header("Shoot Attributes")]
     public HandController firstHand;
@@ -41,6 +43,7 @@ public class PlayerController : MonoBehaviour
         animator = GetComponent<Animator>();
         movable = true;
         jumped = false;
+        controlling = true;
 
         power = 0.0f;
         arms = 2;
@@ -58,10 +61,15 @@ public class PlayerController : MonoBehaviour
     
     void Update()
     {
-        GroundCheck();
-        Jump();
-        Move();
-        Shoot();
+        if (controlling)
+        {
+            GroundCheck();
+            Jump();
+            Move();
+            Shoot();
+        }
+
+        changeControl();
         AnimationControl();
     }
 
@@ -83,6 +91,11 @@ public class PlayerController : MonoBehaviour
 
     void Move()
     {
+        Vector3 cameraPosition = gameObject.transform.position;
+        cameraPosition.z -= 10;
+        cameraPosition.y += 100;
+        camera.transform.position = cameraPosition;
+
         Vector2 movement = new Vector2(Input.GetAxis("Horizontal") * moveSpeed * Time.fixedDeltaTime, 0);
 
         if (movement.x < 0)
@@ -182,8 +195,8 @@ public class PlayerController : MonoBehaviour
             leftRetreiving = true;
             rightRetreiving = true;
             // Call HandController class's function to actually start retreiving
-            firstHand.Retreive();
-            secondHand.Retreive();
+            firstHand.StartRetrieve();
+            secondHand.StartRetrieve();
         }
         if (Input.GetKeyUp(KeyCode.L) && !shootEnabled)
         {
@@ -191,17 +204,15 @@ public class PlayerController : MonoBehaviour
         }
 
         // Check if retreiving is all done
-        if (arms == 0 && leftRetreiving)
+        if (leftRetreiving)
         {
             leftRetreiving = !firstHand.RetreiveComplete();
-            if (leftRetreiving) leftRetreiving = false;
-            if (!leftRetreiving && !rightRetreiving) arms = 2;
+            if (!leftRetreiving) arms++;
         }
-        if (arms == 0 && rightRetreiving)
+        if (rightRetreiving)
         {
             rightRetreiving = !secondHand.RetreiveComplete();
-            if (rightRetreiving) rightRetreiving = false;
-            if (!leftRetreiving && !rightRetreiving) shootEnabled = true;
+            if (!rightRetreiving) arms++;
         }
         
     }
@@ -212,6 +223,29 @@ public class PlayerController : MonoBehaviour
         movable = true;
         state = State.idle;
         arms--;
+    }
+
+    void changeControl()
+    {
+        if(Input.GetKeyDown(KeyCode.Tab))
+        {
+            if (controlling)
+            {
+                controlling = false;
+                firstHand.setControlling(true);
+            }
+            else if (firstHand.getControlling())
+            {
+                firstHand.setControlling(false);
+                secondHand.setControlling(true);
+            }
+            else
+            {
+                secondHand.setControlling(false);
+                controlling = true;
+            }
+            
+        }
     }
 
     void AnimationControl()
@@ -312,5 +346,15 @@ public class PlayerController : MonoBehaviour
     public short getDir()
     {
         return lastDir;
+    }
+
+    public bool getControlling()
+    {
+        return controlling;
+    }
+
+    public void setControlling(bool input)
+    {
+        controlling = input;
     }
 }
