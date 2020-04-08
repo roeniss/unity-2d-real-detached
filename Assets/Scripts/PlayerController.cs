@@ -23,7 +23,6 @@ public class PlayerController : MonoBehaviour
     private short arms;
     private bool leftRetreiving;
     private bool rightRetreiving;
-    private bool shootEnabled;
 
     [Header("Ground Check Attributes")]
     public GameObject groundCheck;
@@ -49,7 +48,6 @@ public class PlayerController : MonoBehaviour
         arms = 2;
         leftRetreiving = false;
         rightRetreiving = false;
-        shootEnabled = true;
 
         whatIsGrounded = LayerMask.GetMask("Ground");
 
@@ -61,9 +59,10 @@ public class PlayerController : MonoBehaviour
     
     void Update()
     {
+        GroundCheck();
+
         if (controlling)
         {
-            GroundCheck();
             Jump();
             Move();
             Shoot();
@@ -153,7 +152,7 @@ public class PlayerController : MonoBehaviour
 
     void Shoot()
     {
-        if (isGrounded && !stateFixed && shootEnabled)
+        if (isGrounded && !stateFixed)
         {
             // Charge
             if (Input.GetKey(KeyCode.L) && arms != 0)
@@ -168,6 +167,7 @@ public class PlayerController : MonoBehaviour
                     if (power < powerLimit) power += powerIncrement;
                 }
             }
+
             // Fire
             if (Input.GetKeyUp(KeyCode.L) && arms != 0)
             {
@@ -188,19 +188,20 @@ public class PlayerController : MonoBehaviour
         }
 
         // Retreive
-        if (Input.GetKeyDown(KeyCode.L) && arms == 0)
+        if (Input.GetKeyDown(KeyCode.R))
         {
-            shootEnabled = false;
-            // Retreiving start.
-            leftRetreiving = true;
-            rightRetreiving = true;
-            // Call HandController class's function to actually start retreiving
-            firstHand.StartRetrieve();
-            secondHand.StartRetrieve();
-        }
-        if (Input.GetKeyUp(KeyCode.L) && !shootEnabled)
-        {
-            shootEnabled = true;
+            if (arms == 1)
+            {
+                leftRetreiving = true;
+                firstHand.StartRetrieve();
+            }
+            else if (arms == 0)
+            {
+                leftRetreiving = true;
+                rightRetreiving = true;
+                firstHand.StartRetrieve();
+                secondHand.StartRetrieve();
+            }
         }
 
         // Check if retreiving is all done
@@ -227,24 +228,40 @@ public class PlayerController : MonoBehaviour
 
     void changeControl()
     {
-        if(Input.GetKeyDown(KeyCode.Tab))
+        if (Input.GetKeyDown(KeyCode.Tab) && arms != 2)
         {
-            if (controlling)
+            if (arms == 1)
             {
-                controlling = false;
-                firstHand.setControlling(true);
+                if (controlling)
+                {
+                    controlling = false;
+                    firstHand.setControlling(true);
+                }
+                else if (firstHand.getControlling())
+                {
+                    controlling = true;
+                    firstHand.setControlling(false);
+                }
             }
-            else if (firstHand.getControlling())
+            else if (arms == 0)
             {
-                firstHand.setControlling(false);
-                secondHand.setControlling(true);
+                if (controlling)
+                {
+                    controlling = false;
+                    firstHand.setControlling(true);
+                }
+                else if (firstHand.getControlling())
+                {
+                    firstHand.setControlling(false);
+                    secondHand.setControlling(true);
+                }
+                else
+                {
+                    controlling = true;
+                    secondHand.setControlling(false);
+                }
+
             }
-            else
-            {
-                secondHand.setControlling(false);
-                controlling = true;
-            }
-            
         }
     }
 
@@ -280,6 +297,7 @@ public class PlayerController : MonoBehaviour
                     if (arms == 1) animator.Play("Walk_Left_2");
                     if (arms == 0) animator.Play("Walk_Left_3");
                 }
+                if (!controlling) state = State.idle;
                 break;
             case State.jump_ready:
                 if (lastDir == 1)
@@ -308,6 +326,7 @@ public class PlayerController : MonoBehaviour
                     if (arms == 1) animator.Play("Jump_Left_Air_2");
                     if (arms == 0) animator.Play("Jump_Left_Air_3");
                 }
+                if (!controlling && groundCheck) state = State.idle;
                 break;
             case State.charge:
                 if (lastDir == 1)
