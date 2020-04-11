@@ -13,6 +13,7 @@ public class PlayerController : MonoBehaviour
     private Rigidbody2D rigidBody;
     private bool movable;
     private bool controlling;
+    private bool controlEnabled;
 
     [Header("Shoot Attributes")]
     public HandController firstHand;
@@ -188,7 +189,7 @@ public class PlayerController : MonoBehaviour
         }
 
         // Retreive
-        if (Input.GetKeyDown(KeyCode.R))
+        if (Input.GetKeyDown(KeyCode.R) && movable)
         {
             if (arms == 1)
             {

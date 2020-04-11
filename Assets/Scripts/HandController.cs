@@ -18,8 +18,8 @@ public class HandController : MonoBehaviour
     private Vector2 playerPosition;
     private enum handState { idle, moving };
     private handState state;
-    private handState lastState;
     private bool controlling;
+    private bool retrieveComplete;
 
     void Start()
     {
@@ -30,8 +30,8 @@ public class HandController : MonoBehaviour
         mass = rigidbody.mass;
         playerPosition = player.transform.position;
         state = handState.idle;
-        lastState = handState.idle;
         controlling = false;
+        retrieveComplete = true;
     }
 
     void Update()
@@ -48,10 +48,16 @@ public class HandController : MonoBehaviour
 
     public void Fire(float power)
     {
+        // Set every property to default
+        state = handState.idle;
+        rigidbody.gravityScale = gravityScale;
+        rigidbody.mass = mass;
         gameObject.SetActive(true);
         Vector2 fireVector = Vector2.zero;
         playerPosition = player.transform.position;
+        retrieveComplete = false;
 
+        // Then fire
         switch (playerController.getDir())
         {
             case 1:
@@ -69,8 +75,8 @@ public class HandController : MonoBehaviour
 
     public void StartRetrieve()
     {
+        // Trigger Retrieve() in the Update()
         state = handState.moving;
-        lastState = handState.moving;
         boxCollider.isTrigger = true;
         rigidbody.gravityScale = 0f;
         rigidbody.mass = 0f;
@@ -96,28 +102,14 @@ public class HandController : MonoBehaviour
                 boxCollider.isTrigger = false;
                 gameObject.SetActive(false);
                 state = handState.idle;
+                retrieveComplete = true;
             }
         }
     }
 
     public bool RetreiveComplete()
     {
-        if (lastState == handState.moving)
-        {
-            if (state == handState.idle)
-            {
-                lastState = handState.idle;
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-        else
-        {
-            return true;
-        }
+        return retrieveComplete;
     }
 
     public void Move()
