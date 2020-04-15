@@ -52,21 +52,24 @@ public class HandController : MonoBehaviour
         state = handState.idle;
         rigidbody.gravityScale = gravityScale;
         rigidbody.mass = mass;
-        gameObject.SetActive(true);
-        Vector2 fireVector = Vector2.zero;
-        playerPosition = player.transform.position;
         retrieveComplete = false;
+        Vector2 fireVector = Vector2.zero;
+
+        playerPosition = player.transform.position;
+        gameObject.SetActive(true);
 
         // Then fire
         switch (playerController.getDir())
         {
             case 1:
+                playerPosition.x += 1;
                 gameObject.transform.position = playerPosition;
-                fireVector = new Vector2(200 + power, 300 + power);
+                fireVector = new Vector2(5 + power, 15 + power);
                 break;
             case -1:
+                playerPosition.x -= 1;
                 gameObject.transform.position = playerPosition;
-                fireVector = new Vector2(-200 - power, 300 + power);
+                fireVector = new Vector2(-5 - power, 15 + power);
                 break;
         }
 

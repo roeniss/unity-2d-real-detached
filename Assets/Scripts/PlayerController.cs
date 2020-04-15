@@ -10,6 +10,7 @@ public class PlayerController : MonoBehaviour
     public float jumpHeight;
     private bool isGrounded;
     private bool jumped;
+    private bool blocked;
     private Rigidbody2D rigidBody;
     private bool movable;
     private bool controlling;
@@ -43,6 +44,7 @@ public class PlayerController : MonoBehaviour
         animator = GetComponent<Animator>();
         movable = true;
         jumped = false;
+        blocked = false;
         controlling = true;
 
         power = 0.0f;
@@ -73,6 +75,18 @@ public class PlayerController : MonoBehaviour
         AnimationControl();
     }
 
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.layer == LayerMask.NameToLayer("Wall"))
+        {
+            blocked = true;
+        }
+        else
+        {
+            blocked = false;
+        }
+    }
+
     void GroundCheck()
     {
         isGrounded = Physics2D.OverlapCircle(groundCheck.transform.position, groundCheckRadius, whatIsGrounded);
@@ -92,8 +106,8 @@ public class PlayerController : MonoBehaviour
     void Move()
     {
         Vector3 cameraPosition = gameObject.transform.position;
-        cameraPosition.z -= 10;
-        cameraPosition.y += 100;
+        cameraPosition.z -= 1;
+        cameraPosition.y += 10;
         camera.transform.position = cameraPosition;
 
         Vector2 movement = new Vector2(Input.GetAxis("Horizontal") * moveSpeed * Time.fixedDeltaTime, 0);
@@ -124,8 +138,12 @@ public class PlayerController : MonoBehaviour
                 if (!stateFixed) state = State.idle;
             }
         }
-        
-        if (movable) rigidBody.transform.Translate(movement);
+
+        if (movable)
+        {
+            rigidBody.transform.Translate(movement);
+        }
+
     }
 
     void Jump()
