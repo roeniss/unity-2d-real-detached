@@ -96,11 +96,6 @@ public class PlayerController : MonoBehaviour
             state = State.jump_air;
             jumped = false;
         }
-        else
-        {
-            if (state == State.jump_ready || state == State.fire) stateFixed = true;
-            else stateFixed = false;
-        }
     }
 
     void Move()
@@ -167,6 +162,7 @@ public class PlayerController : MonoBehaviour
     void MakeJump()
     {
         rigidBody.AddForce(new Vector2(0f, jumpHeight), ForceMode2D.Impulse);
+        stateFixed = false;
     }
 
     void Shoot()
@@ -241,6 +237,7 @@ public class PlayerController : MonoBehaviour
     {
         // Once firing is done, player is able to move, change state and an arm is reduced.
         movable = true;
+        stateFixed = false;
         state = State.idle;
         arms--;
     }

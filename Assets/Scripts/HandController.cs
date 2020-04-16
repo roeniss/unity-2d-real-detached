@@ -10,11 +10,14 @@ public class HandController : MonoBehaviour
     public float retrieveSpeed;
     public float moveSpeed;
     public float retreiveRadius;
+    private short dir;
+    private short lastDir;
 
     private float gravityScale;
     private float mass;
     private Rigidbody2D rigidbody;
     private BoxCollider2D boxCollider;
+    private Animator anim;
     private Vector2 playerPosition;
     private enum handState { idle, moving };
     private handState state;
@@ -26,6 +29,9 @@ public class HandController : MonoBehaviour
         gameObject.SetActive(false);
         rigidbody = GetComponent<Rigidbody2D>();
         boxCollider = GetComponent<BoxCollider2D>();
+        anim = GetComponent<Animator>();
+        dir = 1;
+        lastDir = 1;
         gravityScale = rigidbody.gravityScale;
         mass = rigidbody.mass;
         playerPosition = player.transform.position;
@@ -44,6 +50,7 @@ public class HandController : MonoBehaviour
         {
             Move();
         }
+        AnimationControl();
     }
 
     public void Fire(float power)
@@ -85,7 +92,7 @@ public class HandController : MonoBehaviour
         rigidbody.mass = 0f;
     }
 
-    public void Retrieve()
+    void Retrieve()
     {
         playerPosition = player.transform.position;
 
@@ -115,14 +122,46 @@ public class HandController : MonoBehaviour
         return retrieveComplete;
     }
 
-    public void Move()
+    void Move()
     {
         Vector3 cameraPosition = gameObject.transform.position;
         cameraPosition.z -= 10;
         camera.transform.position = cameraPosition;
 
         Vector2 movement = new Vector2(Input.GetAxis("Horizontal") * moveSpeed * Time.fixedDeltaTime, 0);
+
+        if (movement.x > 0)
+        {
+            dir = 1;
+            lastDir = 1;
+        }
+        else if (movement.x < 0)
+        {
+            dir = -1;
+            lastDir = -1;
+        }
+        else if (movement.x == 0)
+        {
+            dir = 0;
+        }
+
         rigidbody.transform.Translate(movement);
+    }
+
+    void AnimationControl()
+    {
+        switch(dir) {
+            case 1:
+                anim.Play("move_right");
+                break;
+            case -1:
+                anim.Play("move_left");
+                break;
+            case 0:
+                if (lastDir == 1) anim.Play("idle_right");
+                if (lastDir == -1) anim.Play("idle_left");
+                break;
+        }
     }
 
     public bool getControlling()
