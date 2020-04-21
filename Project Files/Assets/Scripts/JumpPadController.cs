@@ -12,35 +12,33 @@ public class JumpPadController : MonoBehaviour
     private bool playerOnPad;
     private bool activated;
 
-    void Start()
+    private void Start()
     {
         activated = false;
     }
 
-    void Update()
+    private void Update()
     {
         PlayerCheck();
         ActivateJumpPad();
     }
 
-    void PlayerCheck()
+    private void PlayerCheck()
     {
         playerOnPad = Physics2D.OverlapCircle(playerCheck.transform.position, playerCheckRadius, LayerMask.GetMask("Player"));
-
-        if (!playerOnPad && activated)
-        {
-            activated = false;
-        }
     }
 
-    void ActivateJumpPad()
+    private void ActivateJumpPad()
     {
         if (switchController.getActivated() && playerOnPad && !activated)
         {
-            activated = true;
             playerRigidbody.AddForce(Vector2.up * jumpPower, ForceMode2D.Impulse);
+            activated = true;
+            Invoke("Deactivate", 0.5f);
         }
     }
+
+    private void Deactivate() { activated = false; }
 
     private void OnDrawGizmos()
     {
