@@ -1457,9 +1457,9 @@ GameObject:
   - component: {fileID: 711674877}
   - component: {fileID: 711674880}
   - component: {fileID: 711674881}
-  - component: {fileID: 711674879}
   - component: {fileID: 711674882}
-  m_Layer: 11
+  - component: {fileID: 711674879}
+  m_Layer: 12
   m_Name: Right Hand
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1541,11 +1541,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerController: {fileID: 193579140}
-  player: {fileID: 193579135}
   camera: {fileID: 304786600}
   retrieveSpeed: 60
   moveSpeed: 10
+  player: {fileID: 193579135}
   retreiveRadius: 3
+  switch_1: {fileID: 1462105690}
 --- !u!50 &711674880
 Rigidbody2D:
   serializedVersion: 4
@@ -1624,8 +1625,8 @@ GameObject:
   - component: {fileID: 718152424}
   - component: {fileID: 718152427}
   - component: {fileID: 718152428}
-  - component: {fileID: 718152426}
   - component: {fileID: 718152429}
+  - component: {fileID: 718152426}
   m_Layer: 11
   m_Name: Left Hand
   m_TagString: Untagged
@@ -1708,11 +1709,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerController: {fileID: 193579140}
-  player: {fileID: 193579135}
   camera: {fileID: 304786600}
   retrieveSpeed: 60
   moveSpeed: 10
+  player: {fileID: 193579135}
   retreiveRadius: 3
+  switch_1: {fileID: 1462105690}
 --- !u!50 &718152427
 Rigidbody2D:
   serializedVersion: 4
@@ -2093,6 +2095,8 @@ MonoBehaviour:
   plugged_green: {fileID: 225759046}
   plugged_red: {fileID: 1807271170}
   handCheck: {fileID: 342577343}
+  leftHand: {fileID: 718152426}
+  rightHand: {fileID: 711674879}
   handCheckRadius: 1.5
 --- !u!4 &1462105692
 Transform:

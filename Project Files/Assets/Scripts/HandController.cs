@@ -5,43 +5,52 @@ using UnityEngine;
 
 public class HandController : MonoBehaviour
 {
+    [Header("Movement Properties")]
     public PlayerController playerController;
-    public GameObject player;
     public Camera camera;
+    private Animator anim;
     public float retrieveSpeed;
     public float moveSpeed;
-    public float retreiveRadius;
     private short dir;
     private short lastDir;
 
-    private float gravityScale;
-    private float mass;
+    [Header("Retrieve Properties")]
+    public GameObject player;
     private Rigidbody2D rigidbody;
     private BoxCollider2D boxCollider;
-    private Animator anim;
     private Vector2 playerPosition;
-    private enum handState { idle, moving };
-    private handState state;
-    private bool controlling;
+    public float retreiveRadius;
+    private float gravityScale;
+    private float mass;
+    private bool retrieving;
     private bool retrieveComplete;
 
-    void Start()
+    public SwitchController switch_1;
+    private bool controlling;
+    private bool movable;
+
+
+    private void Start()
     {
         gameObject.SetActive(false);
-        rigidbody = GetComponent<Rigidbody2D>();
-        boxCollider = GetComponent<BoxCollider2D>();
+
         anim = GetComponent<Animator>();
         dir = 1;
         lastDir = 1;
+
+        rigidbody = GetComponent<Rigidbody2D>();
+        boxCollider = GetComponent<BoxCollider2D>();
+        playerPosition = player.transform.position;
         gravityScale = rigidbody.gravityScale;
         mass = rigidbody.mass;
-        playerPosition = player.transform.position;
-        state = handState.idle;
+        retrieving = false;
+
         controlling = false;
+        movable = true;
         retrieveComplete = true;
     }
 
-    void Update()
+    private void Update()
     {
         if (!controlling)
         {
@@ -57,7 +66,6 @@ public class HandController : MonoBehaviour
     public void Fire(float power)
     {
         // Set every property to default
-        state = handState.idle;
         rigidbody.gravityScale = gravityScale;
         rigidbody.mass = mass;
         retrieveComplete = false;
@@ -66,7 +74,7 @@ public class HandController : MonoBehaviour
         playerPosition = player.transform.position;
         gameObject.SetActive(true);
 
-        // Then fire
+        // Fire. Initial position set right in front of the player's face.
         switch (playerController.getDir())
         {
             case 1:
@@ -86,44 +94,47 @@ public class HandController : MonoBehaviour
 
     public void StartRetrieve()
     {
-        // Trigger Retrieve() in the Update()
-        state = handState.moving;
+        // Trigger 'Retrieve()'. Properties are changed so that the hand can move freely.
+        GetComponent<SpriteRenderer>().enabled = true;
+        movable = true;
+        retrieving = true;
         boxCollider.isTrigger = true;
         rigidbody.gravityScale = 0f;
         rigidbody.mass = 0f;
+
+        // Unplug from switch
+        switch_1.setPlugged(false);
     }
 
-    void Retrieve()
+    private void Retrieve()
     {
         playerPosition = player.transform.position;
 
-        if (state == handState.moving)
+        if (retrieving)
         {
             Vector2 temp = new Vector2(transform.position.x, transform.position.y);
             Vector2 diff = playerPosition - temp;
             Vector2 direction = diff.normalized;
             Vector2 movement = direction * retrieveSpeed * Time.deltaTime;
 
+            // Move towards the player
             transform.Translate(movement, Space.World);
 
+            // Retrieve complete
             if (diff.magnitude < retreiveRadius)
             {
                 rigidbody.gravityScale = gravityScale;
                 rigidbody.mass = mass;
                 boxCollider.isTrigger = false;
                 gameObject.SetActive(false);
-                state = handState.idle;
+                retrieving = false;
                 retrieveComplete = true;
             }
         }
     }
+    
 
-    public bool RetreiveComplete()
-    {
-        return retrieveComplete;
-    }
-
-    void Move()
+    private void Move()
     {
         Vector3 cameraPosition = gameObject.transform.position;
         cameraPosition.z -= 10;
@@ -146,10 +157,10 @@ public class HandController : MonoBehaviour
             dir = 0;
         }
 
-        rigidbody.transform.Translate(movement);
+        if (movable) rigidbody.transform.Translate(movement);
     }
 
-    void AnimationControl()
+    private void AnimationControl()
     {
         switch(dir) {
             case 1:
@@ -165,13 +176,11 @@ public class HandController : MonoBehaviour
         }
     }
 
-    public bool getControlling()
-    {
-        return controlling;
-    }
+    public bool getControlling() { return controlling; }
 
-    public void setControlling(bool input)
-    {
-        controlling = input;
-    }
+    public void setControlling(bool controlling) { this.controlling = controlling; }
+
+    public void setMovable(bool movable) { this.movable = movable; }
+
+    public bool getRetreiveComplete() { return retrieveComplete; }
 }

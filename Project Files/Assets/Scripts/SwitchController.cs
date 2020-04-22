@@ -6,13 +6,15 @@ public class SwitchController : MonoBehaviour
 {
     public GameObject unplugged_switch, plugged_green, plugged_red;
     public GameObject handCheck;
+    public HandController leftHand, rightHand;
     public float handCheckRadius;
-    private bool plugged;
-    private bool handAround;
+    private bool leftPlugged, rightPlugged;
+    private bool leftHandAround, rightHandAround;
     private bool activated;
 
     void Start()
     {
+        leftHandAround = rightHandAround = false;
         activated = false;
         plugged_green.SetActive(false);
         plugged_red.SetActive(false);
@@ -27,42 +29,54 @@ public class SwitchController : MonoBehaviour
 
     private void HandCheck()
     {
-        handAround = Physics2D.OverlapCircle(handCheck.transform.position, handCheckRadius, LayerMask.GetMask("Hand"));
+        leftHandAround = Physics2D.OverlapCircle(handCheck.transform.position, handCheckRadius, LayerMask.GetMask("Left Hand"));
+        rightHandAround = Physics2D.OverlapCircle(handCheck.transform.position, handCheckRadius, LayerMask.GetMask("Right Hand"));
     }
 
     private void ActivateSwitch()
     {
         if (Input.GetKeyDown(KeyCode.Q))
         {
-            if (plugged)
+            if (leftPlugged || rightPlugged)
             {
                 // Activating switch
                 if (!activated)
                 {
-                    activated = true;
-                    Invoke("Deactivate", 0.5f);
+                    if ((leftPlugged && leftHand.getControlling()) ||
+                        (rightPlugged && rightHand.getControlling()))
+                    {
+                        activated = true;
+                        Invoke("Deactivate", 0.5f);
+                    }
                 }
             }
             else
             {
                 // Plugging into switch
-                if (handAround && !plugged)
+                if (leftHandAround && !leftPlugged)
                 {
-                    plugged = true;
+                    leftPlugged = true;
+                    leftHand.GetComponent<SpriteRenderer>().enabled = false;
+                    leftHand.setMovable(false);
+                    return;
+                }
+                if (rightHandAround && !rightPlugged)
+                {
+                    rightPlugged = true;
+                    rightHand.GetComponent<SpriteRenderer>().enabled = false;
+                    rightHand.setMovable(false);
+                    return;
                 }
             }
         }
     }
 
-    private void Deactivate() {
-        activated = false;
-        plugged_green.SetActive(false);
-        plugged_red.SetActive(true);
-    }
+    // Swtich comes back to deactivated state, 0.5 seconds after it is activated
+    private void Deactivate() { activated = false; }
 
     private void SpriteControl()
     {
-        if (plugged)
+        if (leftPlugged || rightPlugged)
         {
             if (activated)
             {
@@ -87,12 +101,15 @@ public class SwitchController : MonoBehaviour
 
     public bool getActivated() { return activated; }
 
-    public bool getPlugged() { return plugged; }
+    public bool getLeftPlugged() { return leftPlugged; }
 
-    public void setPlugged(bool plugged) { this.plugged = plugged; }
+    public bool getRightPlugged() { return rightPlugged; }
 
-    private void OnDrawGizmos()
+    public void setPlugged(bool plugged)
     {
-        Gizmos.DrawWireSphere(handCheck.transform.position, handCheckRadius);
+        this.leftPlugged = plugged;
+        this.rightPlugged = plugged;
     }
+
+    private void OnDrawGizmos() { Gizmos.DrawWireSphere(handCheck.transform.position, handCheckRadius); }
 }

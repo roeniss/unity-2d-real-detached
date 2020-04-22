@@ -87,7 +87,10 @@ public class PlayerController : MonoBehaviour
     void GroundCheck()
     {
         isGrounded = Physics2D.OverlapCircle(groundCheck.transform.position, groundCheckRadius, LayerMask.GetMask("Ground"));
-        if (!isGrounded) isGrounded = Physics2D.OverlapCircle(groundCheck.transform.position, groundCheckRadius, LayerMask.GetMask("Hand"));
+        if (!isGrounded)
+            isGrounded = Physics2D.OverlapCircle(groundCheck.transform.position, groundCheckRadius, LayerMask.GetMask("Left Hand"));
+        if (!isGrounded)
+            isGrounded = Physics2D.OverlapCircle(groundCheck.transform.position, groundCheckRadius, LayerMask.GetMask("Right Hand"));
 
         if (!isGrounded)
         {
@@ -220,12 +223,12 @@ public class PlayerController : MonoBehaviour
         // Check if retreiving is all done
         if (leftRetreiving)
         {
-            leftRetreiving = !firstHand.RetreiveComplete();
+            leftRetreiving = !firstHand.getRetreiveComplete();
             if (!leftRetreiving) arms++;
         }
         if (rightRetreiving)
         {
-            rightRetreiving = !secondHand.RetreiveComplete();
+            rightRetreiving = !secondHand.getRetreiveComplete();
             if (!rightRetreiving) arms++;
         }
         
