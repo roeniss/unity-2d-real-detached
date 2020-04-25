@@ -1986,6 +1986,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerRigidbody: {fileID: 193579136}
   playerCheck: {fileID: 1146911107}
+  jumpPad: {fileID: 416162995}
   switchController: {fileID: 1462105690}
   playerCheckRadius: 1.42
   jumpPower: 40
